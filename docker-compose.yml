@@ -1,0 +1,38 @@
+version: '3.8'
+
+networks:
+  app-network:
+
+volumes:
+  app-data:
+
+services:
+  mysql:
+    container_name: julo.mysql
+    command: mysqld --sql_mode=""
+    environment:
+      - MYSQL_USER=julo
+      - MYSQL_PASSWORD=julo
+      - MYSQL_DATABASE=julo
+      - MYSQL_ROOT_PASSWORD=Root#123
+      - TZ=Asia/Jakarta
+    image: mysql:5.7
+    networks:
+      - app-network
+    ports: 
+      - 33066:3306/tcp
+    restart: unless-stopped
+    volumes:
+      - app-data:/var/lib/mysql
+
+  backend:
+    build: .
+    command: php artisan serve --host=0.0.0.0 --port=9090
+    image: julo:local
+    container_name: julo.backend
+    volumes:
+      - .:/var/www
+    networks:
+      app-network:
+    ports:
+      - 9090:9090/tcp
