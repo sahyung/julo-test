@@ -27,6 +27,7 @@ Route::group(['prefix' => '/v1'], function () {
             Route::get('/', [WalletController::class, 'view'])->name('view_wallet');
             Route::patch('/', [WalletController::class, 'disable'])->name('disable_wallet');
             Route::post('/deposits', [WalletController::class, 'deposit'])->name('deposit_wallet');
+            Route::post('/withdrawals', [WalletController::class, 'withdrawal'])->name('withdrawal_wallet');
         });
     });
 });

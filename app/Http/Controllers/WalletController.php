@@ -155,6 +155,74 @@ class WalletController extends Controller
     }
 
     /**
+     * Use virtual money from my wallet
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function withdrawal(Request $request)
+    {
+        $wallet = $this->getWallet($request);
+
+        if ($wallet->status !== $this::STATUS_ENABLED) {
+            return $this->responseError('bad_request', [
+                'data' => [
+                    'error' => 'Wallet disabled',
+                ],
+            ]);
+        }
+
+        $rules = [
+            'amount' => "required|numeric|min:0|not_in:0|max:$wallet->balance",
+            'reference_id' => 'required|string|size:36|unique:transactions,reference_id',
+        ];
+
+        $validator = Validator::make($request->only([
+            'amount',
+            'reference_id',
+        ]), $rules);
+
+        if ($validator->fails()) {
+            $messages = $validator->messages();
+
+            return $this->responseError('validation', [
+                'data' => [
+                    'error' => $messages,
+                ],
+            ]);
+        }
+
+        $newTrx = [
+            'owned_by' => $wallet->owned_by,
+            'type' => $this::TYPE_WITHDRAWAL,
+            'amount' => $request->amount,
+            'reference_id' => $request->reference_id,
+        ];
+
+        $wallet->balance -= $request->amount;
+
+        if ($wallet->save()) {
+            $newTrx['status'] = $this::STATUS_SUCCESS;
+        } else {
+            $newTrx['status'] = $this::STATUS_FAILED;
+        }
+
+        $trx = Transaction::create($newTrx)->makeHidden([
+            'deposited_at',
+            'deposited_by',
+            'type',
+            'owned_by',
+        ]);
+
+        return $this->responseSuccess('store_data', [
+            'data' => [
+                'deposit' => $trx,
+            ],
+        ]);
+
+    }
+
+    /**
      * disable wallet
      *
      * @param  \Illuminate\Http\Request  $request
