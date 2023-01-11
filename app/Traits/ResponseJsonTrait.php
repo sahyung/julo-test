@@ -8,8 +8,7 @@ trait ResponseJsonTrait
 {
     /**
      * Message response success
-     * types : get_data, store_data, update_data
-     *      delete_data, login, logout, send_mail, otp_send
+     * types : store_data, default
      *
      * @return mixed
      */

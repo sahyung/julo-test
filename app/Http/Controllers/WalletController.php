@@ -21,22 +21,17 @@ class WalletController extends Controller
     /**
      * get wallet by api_token
      *
-     * @return \App\Models\Wallet || null
+     * @return \App\Models\Wallet || QueryException
      */
     private function getWallet($request)
     {
         $api_token = explode('Token ', $request->header('Authorization'))[1];
-        return Wallet::where('api_token', $api_token)->first();
-    }
 
-    /**
-     * view wallet balance
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
+        try {
+            return Wallet::where('api_token', $api_token)->first();
+        } catch (QueryException $exception) {
+            return $exception;
+        }
     }
 
     /**
@@ -47,7 +42,15 @@ class WalletController extends Controller
      */
     public function store(Request $request)
     {
-        $wallet = $this->getWallet($request)->makeHidden([
+        $wallet = $this->getWallet($request);
+
+        if ($wallet instanceof QueryException) {
+            return $this->responseError('default', [
+                'message' => $wallet->errorInfo,
+            ]);
+        }
+
+        $wallet->makeHidden([
             'disabled_at',
         ]);
 
@@ -59,16 +62,24 @@ class WalletController extends Controller
             ]);
         }
 
-        $wallet->update([
-            'status' => $this::STATUS_ENABLED,
-            'enabled_at' => now(),
-        ]);
+        try {
+            $wallet->update([
+                'status' => $this::STATUS_ENABLED,
+                'enabled_at' => now(),
+            ]);
 
-        return $this->responseSuccess('store_data', [
-            'data' => [
-                'wallet' => $wallet,
-            ],
-        ]);
+            return $this->responseSuccess('store_data', [
+                'data' => [
+                    'wallet' => $wallet,
+                ],
+            ]);
+        } catch (QueryException $exception) {
+            $errorInfo = $exception->errorInfo;
+
+            return $this->responseError('default', [
+                'message' => $errorInfo,
+            ]);
+        }
     }
 
     /**
@@ -81,6 +92,12 @@ class WalletController extends Controller
     {
         $wallet = $this->getWallet($request);
 
+        if ($wallet instanceof QueryException) {
+            return $this->responseError('default', [
+                'message' => $wallet->errorInfo,
+            ]);
+        }
+
         if ($wallet->status !== $this::STATUS_ENABLED) {
             return $this->responseError('bad_request', [
                 'data' => [
@@ -89,7 +106,7 @@ class WalletController extends Controller
             ]);
         }
 
-        return $this->responseSuccess('store_data', [
+        return $this->responseSuccess('default', [
             'data' => [
                 'wallet' => $wallet,
             ],
@@ -105,6 +122,12 @@ class WalletController extends Controller
     public function deposit(Request $request)
     {
         $wallet = $this->getWallet($request);
+
+        if ($wallet instanceof QueryException) {
+            return $this->responseError('default', [
+                'message' => $wallet->errorInfo,
+            ]);
+        }
 
         if ($wallet->status !== $this::STATUS_ENABLED) {
             return $this->responseError('bad_request', [
@@ -186,6 +209,12 @@ class WalletController extends Controller
     {
         $wallet = $this->getWallet($request);
 
+        if ($wallet instanceof QueryException) {
+            return $this->responseError('default', [
+                'message' => $wallet->errorInfo,
+            ]);
+        }
+
         if ($wallet->status !== $this::STATUS_ENABLED) {
             return $this->responseError('bad_request', [
                 'data' => [
@@ -217,31 +246,43 @@ class WalletController extends Controller
         $newTrx = [
             'owned_by' => $wallet->owned_by,
             'type' => $this::TYPE_WITHDRAWAL,
+            'status' => $this::STATUS_FAILED,
             'amount' => $request->amount,
             'reference_id' => $request->reference_id,
         ];
 
         $wallet->balance -= $request->amount;
 
+        // Rollback all data if one of the database transactions fails
+        DB::beginTransaction();
+
         if ($wallet->save()) {
             $newTrx['status'] = $this::STATUS_SUCCESS;
-        } else {
-            $newTrx['status'] = $this::STATUS_FAILED;
         }
 
-        $trx = Transaction::create($newTrx)->makeHidden([
-            'deposited_at',
-            'deposited_by',
-            'type',
-            'owned_by',
-        ]);
+        // restore balance if fail to save transaction
+        try {
+            $trx = Transaction::create($newTrx)->makeHidden([
+                'deposited_at',
+                'deposited_by',
+                'type',
+                'owned_by',
+            ]);
 
-        return $this->responseSuccess('store_data', [
-            'data' => [
-                'deposit' => $trx,
-            ],
-        ]);
+            DB::commit();
+            return $this->responseSuccess('store_data', [
+                'data' => [
+                    'withdrawal' => $trx,
+                ],
+            ]);
+        } catch (QueryException $exception) {
+            DB::rollback();
+            $errorInfo = $exception->errorInfo;
 
+            return $this->responseError('default', [
+                'message' => $errorInfo,
+            ]);
+        }
     }
 
     /**
@@ -253,6 +294,12 @@ class WalletController extends Controller
     public function transaction(Request $request)
     {
         $wallet = $this->getWallet($request);
+
+        if ($wallet instanceof QueryException) {
+            return $this->responseError('default', [
+                'message' => $wallet->errorInfo,
+            ]);
+        }
 
         if ($wallet->status !== $this::STATUS_ENABLED) {
             return $this->responseError('bad_request', [
@@ -300,7 +347,15 @@ class WalletController extends Controller
      */
     public function disable(Request $request)
     {
-        $wallet = $this->getWallet($request)->makeHidden([
+        $wallet = $this->getWallet($request);
+
+        if ($wallet instanceof QueryException) {
+            return $this->responseError('default', [
+                'message' => $wallet->errorInfo,
+            ]);
+        }
+
+        $wallet->makeHidden([
             'enabled_at',
         ]);
         if ($wallet->status === $this::STATUS_DISABLED) {
@@ -311,15 +366,24 @@ class WalletController extends Controller
             ]);
         }
 
-        $wallet->update([
-            'status' => $this::STATUS_DISABLED,
-            'disabled_at' => now(),
-        ]);
+        try {
+            $wallet->update([
+                'status' => $this::STATUS_DISABLED,
+                'disabled_at' => now(),
+            ]);
 
-        return $this->responseSuccess('default', [
-            'data' => [
-                'wallet' => $wallet,
-            ],
-        ]);
+            return $this->responseSuccess('default', [
+                'data' => [
+                    'wallet' => $wallet,
+                ],
+            ]);
+        } catch (QueryException $exception) {
+            $errorInfo = $exception->errorInfo;
+
+            return $this->responseError('default', [
+                'message' => $errorInfo,
+            ]);
+        }
+
     }
 }
