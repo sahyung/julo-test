@@ -14,16 +14,13 @@ class AuthController extends Controller
             'customer_xid' => 'required|string|size:36',
         ];
 
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(['customer_xid']), $rules);
         if ($validator->fails()) {
             $messages = $validator->messages();
-            $errors = $messages->all();
 
             return $this->responseError('validation', [
                 'data' => [
-                    'error' => [
-                        'customer_xid' => $errors,
-                    ],
+                    'error' => $messages,
                 ],
             ]);
         }
@@ -35,7 +32,6 @@ class AuthController extends Controller
         Wallet::firstOrCreate([
             'api_token' => $token,
             'owned_by' => $cid,
-            'status' => 'disabled',
         ]);
 
         return $this->responseSuccess('store_data', [
