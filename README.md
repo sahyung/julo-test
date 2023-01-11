@@ -18,6 +18,7 @@
 3. mini ewallet is ready to test :)
 
 ## Note:
+- documentation at [postman documenter](https://documenter.getpostman.com/view/8411283/SVfMSqA3?version=latest)
 - timezone = UTC
 
 ## About Laravel
