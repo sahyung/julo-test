@@ -17,7 +17,7 @@
 2. run `docker-compose up -d`
 3. mini ewallet is ready to test :)
 
-# Note:
+## Note:
 - timezone = UTC
 
 ## About Laravel
