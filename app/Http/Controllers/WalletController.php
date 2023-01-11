@@ -57,6 +57,31 @@ class WalletController extends Controller
     }
 
     /**
+     * view my wallet balance
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function view(Request $request)
+    {
+        $wallet = $this->getWallet($request);
+
+        if ($wallet->status !== $this::STATUS_ENABLED) {
+            return $this->responseError('bad_request', [
+                'data' => [
+                    'error' => 'Wallet disabled',
+                ],
+            ]);
+        }
+
+        return $this->responseSuccess('store_data', [
+            'data' => [
+                'wallet' => $wallet,
+            ],
+        ]);
+    }
+
+    /**
      * disable wallet
      *
      * @param  \Illuminate\Http\Request  $request

@@ -24,7 +24,8 @@ Route::group(['prefix' => '/v1'], function () {
     Route::group(['middleware' => ['customAuth']], function () {
         Route::group(['prefix' => '/wallet'], function () {
             Route::post('/', [WalletController::class, 'store'])->name('enable_wallet');
-            Route::patch('/', [WalletController::class, 'disable'])->name('view_wallet');
+            Route::get('/', [WalletController::class, 'view'])->name('view_wallet');
+            Route::patch('/', [WalletController::class, 'disable'])->name('disable_wallet');
         });
     });
 });
