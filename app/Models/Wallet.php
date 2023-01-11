@@ -12,6 +12,11 @@ class Wallet extends Model
     use HasFactory, SoftDeletes, UuidsTrait;
 
     /**
+     * @var boolean
+     */
+    public $incrementing = false;
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array
@@ -23,4 +28,7 @@ class Wallet extends Model
         'balance',
         'api_token',
     ];
+
+    protected $hidden = ['api_token', 'deleted_at', 'created_at', 'updated_at'];
+
 }
