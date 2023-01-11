@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ApiClient;
+use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -29,8 +29,11 @@ class AuthController extends Controller
         $cid = $request->customer_xid;
         $token = hash('sha256', $cid);
 
-        ApiClient::firstOrCreate([
+        // TODO: handled when already enabled
+        Wallet::firstOrCreate([
             'api_token' => $token,
+            'owned_by' => $cid,
+            'status' => 'disabled',
         ]);
 
         return $this->responseSuccess('store_data', [

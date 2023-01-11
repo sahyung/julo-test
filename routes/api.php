@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\WalletController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -15,12 +16,14 @@ use Illuminate\Support\Facades\Route;
 |
  */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
 Route::group(['prefix' => '/v1'], function () {
     Route::controller(AuthController::class)->group(function () {
         Route::post('init', 'init');
+    });
+
+    Route::group(['middleware' => ['customAuth']], function () {
+        Route::group(['prefix' => '/wallet'], function () {
+            Route::post('/', [WalletController::class, 'store'])->name('enable_wallet');
+        });
     });
 });

@@ -24,10 +24,17 @@ trait ResponseJsonTrait
                 break;
         }
 
-        return response()->json([
-            'data' => isset($options['data']) ? $options['data'] : null,
+        $response = [
             'status' => 'success',
-        ], $code);
+        ];
+        if (isset($options['message'])) {
+            $response['message'] = $options['message'];
+        }
+        if (isset($options['data'])) {
+            $response['data'] = $options['data'];
+        }
+
+        return response()->json($response, $code);
     }
 
     /**
@@ -64,9 +71,16 @@ trait ResponseJsonTrait
                 break;
         }
 
-        return response()->json([
-            'data' => isset($options['data']) ? $options['data'] : [],
+        $response = [
             'status' => 'fail',
-        ], $code);
+        ];
+        if (isset($options['message'])) {
+            $response['message'] = $options['message'];
+        }
+        if (isset($options['data'])) {
+            $response['data'] = $options['data'];
+        }
+
+        return response()->json($response, $code);
     }
 }
