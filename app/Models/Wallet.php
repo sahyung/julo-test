@@ -25,10 +25,10 @@ class Wallet extends Model
         'owned_by',
         'status',
         'enabled_at',
+        'disabled_at',
         'balance',
         'api_token',
     ];
 
     protected $hidden = ['api_token', 'deleted_at', 'created_at', 'updated_at'];
-
 }

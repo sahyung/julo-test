@@ -19,6 +19,7 @@ class CreateWalletsTable extends Migration
             $table->uuid('owned_by');
             $table->string('status')->default('disabled');
             $table->timestamp('enabled_at')->nullable();
+            $table->timestamp('disabled_at')->nullable();
             $table->bigInteger('balance')->default(0);
             $table->string('api_token')->unique();
             $table->softDeletes();

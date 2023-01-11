@@ -41,7 +41,9 @@ class WalletController extends Controller
      */
     public function store(Request $request)
     {
-        $wallet = $this->getWallet($request);
+        $wallet = $this->getWallet($request)->makeHidden([
+            'disabled_at',
+        ]);
 
         if ($wallet->status === $this::STATUS_ENABLED) {
             return $this->responseError('bad_request', [
@@ -279,7 +281,9 @@ class WalletController extends Controller
      */
     public function disable(Request $request)
     {
-        $wallet = $this->getWallet($request);
+        $wallet = $this->getWallet($request)->makeHidden([
+            'enabled_at',
+        ]);
         if ($wallet->status === $this::STATUS_DISABLED) {
             return $this->responseError('bad_request', [
                 'data' => [
@@ -290,6 +294,7 @@ class WalletController extends Controller
 
         $wallet->update([
             'status' => $this::STATUS_DISABLED,
+            'disabled_at' => now(),
         ]);
 
         return $this->responseSuccess('default', [
