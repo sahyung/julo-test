@@ -18,7 +18,7 @@
 3. mini ewallet is ready to test :)
 
 # Note:
-- deposit and withdrawal currently are rate limited to 1 trx per minute
+- timezone = UTC
 
 ## About Laravel
 
