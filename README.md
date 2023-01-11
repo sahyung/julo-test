@@ -7,6 +7,19 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Prerequisite
+- Docker
+- port 80 is free
+
+## Quickstart
+
+1. clone project
+2. run `docker-compose up -d`
+3. mini ewallet is ready to test :)
+
+# Note:
+- deposit and withdrawal currently are rate limited to 1 trx per minute
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

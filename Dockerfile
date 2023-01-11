@@ -36,6 +36,7 @@ USER ${USER}
 
 # Copy permission to selected user
 COPY --chown=${USER}:${GROUP} . .
+RUN chmod +x ./startup.sh
 
 EXPOSE 9090
 

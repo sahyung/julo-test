@@ -15,7 +15,7 @@ services:
       - MYSQL_PASSWORD=julo
       - MYSQL_DATABASE=julo
       - MYSQL_ROOT_PASSWORD=Root#123
-      - TZ=Asia/Jakarta
+      - TZ=UTC
     image: mysql:5.7
     networks:
       - app-network
@@ -26,13 +26,15 @@ services:
       - app-data:/var/lib/mysql
 
   backend:
+    command: ./startup.sh
+    depends_on:
+      - mysql
     build: .
-    command: php artisan serve --host=0.0.0.0 --port=9090
     image: julo:local
     container_name: julo.backend
-    volumes:
-      - .:/var/www
+    # volumes:
+    #   - .:/var/www
     networks:
       app-network:
     ports:
-      - 9090:9090/tcp
+      - 80:80/tcp
