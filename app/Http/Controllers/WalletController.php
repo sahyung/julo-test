@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Transaction;
 use App\Models\Wallet;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -17,6 +18,11 @@ class WalletController extends Controller
     const TYPE_DEPOSIT = 'deposit';
     const TYPE_WITHDRAWAL = 'withdrawal';
 
+    /**
+     * get wallet by api_token
+     *
+     * @return \App\Models\Wallet || null
+     */
     private function getWallet($request)
     {
         $api_token = explode('Token ', $request->header('Authorization'))[1];
@@ -131,30 +137,43 @@ class WalletController extends Controller
         $newTrx = [
             'owned_by' => $wallet->owned_by,
             'type' => $this::TYPE_DEPOSIT,
+            'status' => $this::STATUS_FAILED,
             'amount' => $request->amount,
             'reference_id' => $request->reference_id,
         ];
 
         $wallet->balance += $request->amount;
 
+        // Rollback all data if one of the database transactions fails
+        DB::beginTransaction();
+
         if ($wallet->save()) {
             $newTrx['status'] = $this::STATUS_SUCCESS;
-        } else {
-            $newTrx['status'] = $this::STATUS_FAILED;
         }
 
-        $trx = Transaction::create($newTrx)->makeHidden([
-            'withdrawn_at',
-            'withdrawn_by',
-            'type',
-            'owned_by',
-        ]);
+        // restore balance if fail to save transaction
+        try {
+            $trx = Transaction::create($newTrx)->makeHidden([
+                'withdrawn_at',
+                'withdrawn_by',
+                'type',
+                'owned_by',
+            ]);
 
-        return $this->responseSuccess('store_data', [
-            'data' => [
-                'deposit' => $trx,
-            ],
-        ]);
+            DB::commit();
+            return $this->responseSuccess('store_data', [
+                'data' => [
+                    'deposit' => $trx,
+                ],
+            ]);
+        } catch (QueryException $exception) {
+            DB::rollback();
+            $errorInfo = $exception->errorInfo;
+
+            return $this->responseError('default', [
+                'message' => $errorInfo,
+            ]);
+        }
     }
 
     /**
@@ -244,9 +263,9 @@ class WalletController extends Controller
         }
 
         $page = $request->query('page', 1);
-        $perPage =  $request->query('per_page', 10);
+        $perPage = $request->query('per_page', 10);
         $offset = ($page - 1) * $perPage;
-        
+
         $trxModel = DB::table('transactions AS t')->whereNull('t.deleted_at');
         $trxs = $trxModel->select(
             't.id',
@@ -256,12 +275,12 @@ class WalletController extends Controller
             't.amount',
             't.reference_id'
         )
-        ->orderBy('transacted_at', 'desc');
+            ->orderBy('transacted_at', 'desc');
 
         $totalData = $trxModel->count();
         $trxs = $trxs->offset($offset)
-        ->limit($perPage)
-        ->get();
+            ->limit($perPage)
+            ->get();
 
         return $this->responseSuccess('default', [
             'data' => [

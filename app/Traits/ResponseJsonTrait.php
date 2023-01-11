@@ -47,6 +47,10 @@ trait ResponseJsonTrait
      */
     protected function responseError($type, $options = [])
     {
+        $response = [
+            'status' => 'fail',
+        ];
+
         switch ($type) {
             case 'validation':
                 $code = Response::HTTP_UNPROCESSABLE_ENTITY;
@@ -68,12 +72,10 @@ trait ResponseJsonTrait
                 break;
             default:
                 $code = Response::HTTP_INTERNAL_SERVER_ERROR;
+                $response['status'] = 'error';
                 break;
         }
 
-        $response = [
-            'status' => 'fail',
-        ];
         if (isset($options['message'])) {
             $response['message'] = $options['message'];
         }

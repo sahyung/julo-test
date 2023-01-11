@@ -28,7 +28,6 @@ class AuthController extends Controller
         $cid = $request->customer_xid;
         $token = hash('sha256', $cid);
 
-        // TODO: handled when already enabled
         Wallet::firstOrCreate([
             'api_token' => $token,
             'owned_by' => $cid,
