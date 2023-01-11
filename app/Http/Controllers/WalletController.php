@@ -125,13 +125,22 @@ class WalletController extends Controller
             ]);
         }
 
-        $trx = Transaction::create([
+        $newTrx = [
             'owned_by' => $wallet->owned_by,
-            'status' => $this::STATUS_SUCCESS,
             'type' => $this::TYPE_DEPOSIT,
             'amount' => $request->amount,
             'reference_id' => $request->reference_id,
-        ])->makeHidden([
+        ];
+
+        $wallet->balance += $request->amount;
+
+        if ($wallet->save()) {
+            $newTrx['status'] = $this::STATUS_SUCCESS;
+        } else {
+            $newTrx['status'] = $this::STATUS_FAILED;
+        }
+
+        $trx = Transaction::create($newTrx)->makeHidden([
             'withdrawn_at',
             'withdrawn_by',
             'type',
