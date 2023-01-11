@@ -21,7 +21,9 @@ class AuthController extends Controller
 
             return $this->responseError('validation', [
                 'data' => [
-                    'errors' => $errors,
+                    'error' => [
+                        'customer_xid' => $errors,
+                    ],
                 ],
             ]);
         }

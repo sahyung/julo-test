@@ -8,6 +8,13 @@ use Illuminate\Http\Request;
 class WalletController extends Controller
 {
     const STATUS_ENABLED = 'enabled';
+    const STATUS_DISABLED = 'disabled';
+
+    private function getWallet($request)
+    {
+        $api_token = explode('Token ', $request->header('Authorization'))[1];
+        return Wallet::where('api_token', $api_token)->first();
+    }
 
     /**
      * view wallet balance
@@ -27,13 +34,12 @@ class WalletController extends Controller
      */
     public function store(Request $request)
     {
-        $api_token = explode('Token ', $request->header('Authorization'))[1];
-        $wallet = Wallet::where('api_token', $api_token)->first();
+        $wallet = $this->getWallet($request);
 
         if ($wallet->status === $this::STATUS_ENABLED) {
             return $this->responseError('bad_request', [
                 'data' => [
-                    'message' => 'Already enabled',
+                    'error' => 'Already enabled',
                 ],
             ]);
         }
@@ -57,8 +63,25 @@ class WalletController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function disable(Request $request)
     {
-        //
+        $wallet = $this->getWallet($request);
+        if ($wallet->status === $this::STATUS_DISABLED) {
+            return $this->responseError('bad_request', [
+                'data' => [
+                    'error' => 'Already disabled',
+                ],
+            ]);
+        }
+
+        $wallet->update([
+            'status' => $this::STATUS_DISABLED,
+        ]);
+
+        return $this->responseSuccess('default', [
+            'data' => [
+                'wallet' => $wallet,
+            ],
+        ]);
     }
 }
