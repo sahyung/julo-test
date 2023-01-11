@@ -38,6 +38,6 @@ USER ${USER}
 COPY --chown=${USER}:${GROUP} . .
 RUN chmod +x ./startup.sh
 
-EXPOSE 9090
+EXPOSE 80
 
 CMD ["php-fpm"]
