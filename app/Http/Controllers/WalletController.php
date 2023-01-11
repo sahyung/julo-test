@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class WalletController extends Controller
@@ -220,6 +221,53 @@ class WalletController extends Controller
             ],
         ]);
 
+    }
+
+    /**
+     * View my wallet transactions
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function transaction(Request $request)
+    {
+        $wallet = $this->getWallet($request);
+
+        if ($wallet->status !== $this::STATUS_ENABLED) {
+            return $this->responseError('bad_request', [
+                'data' => [
+                    'error' => 'Wallet disabled',
+                ],
+            ]);
+        }
+
+        $page = $request->query('page', 1);
+        $perPage =  $request->query('per_page', 10);
+        $offset = ($page - 1) * $perPage;
+        
+        $trxModel = DB::table('transactions AS t')->whereNull('t.deleted_at');
+        $trxs = $trxModel->select(
+            't.id',
+            't.status',
+            't.created_at AS transacted_at',
+            't.type',
+            't.amount',
+            't.reference_id'
+        )
+        ->orderBy('transacted_at', 'desc');
+
+        $totalData = $trxModel->count();
+        $trxs = $trxs->offset($offset)
+        ->limit($perPage)
+        ->get();
+
+        return $this->responseSuccess('default', [
+            'data' => [
+                'total' => $totalData,
+                'page' => $page,
+                'transactions' => $trxs,
+            ],
+        ]);
     }
 
     /**
