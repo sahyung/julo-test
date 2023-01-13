@@ -392,4 +392,36 @@ class WalletTest extends TestCase
                 ],
             ]);
     }
+
+    /**
+     * Test use virtual money from my wallet fail invalid amount
+     *
+     * @return void
+     */
+    public function testWalletWithdrawalInvalidAmount()
+    {
+        $token = $this->testEnableWallet();
+
+        $headers = [
+            'Authorization' => 'Token ' . $token,
+            'Accept' => 'application/json',
+        ];
+
+        $data = [
+            'amount' => 0,
+            'reference_id' => Uuid::generate(4)->string,
+        ];
+
+        $response = $this->json('POST', '/api/v1/wallet/withdrawals', $data, $headers);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'status' => 'fail',
+                'data' => [
+                    "error" => [
+                        "amount" => [],
+                    ],
+                ],
+            ]);
+    }
 }
