@@ -253,7 +253,7 @@ class WalletController extends Controller
 
         // Rollback all data if one of the database transactions fails
         DB::beginTransaction();
-        
+
         if ($wallet->balance >= $request->amount) {
             $wallet->balance -= $request->amount;
             if ($wallet->save()) {
@@ -395,6 +395,5 @@ class WalletController extends Controller
                 'message' => $errorInfo,
             ]);
         }
-
     }
 }
