@@ -154,4 +154,29 @@ class WalletTest extends TestCase
                 ],
             ]);
     }
+
+    /**
+     * Test view my wallet balance disabled
+     *
+     * @return void
+     */
+    public function testViewWalletDisabled()
+    {
+        $token = $this->testInitWallet();
+
+        $headers = [
+            'Authorization' => 'Token ' . $token,
+            'Accept' => 'application/json',
+        ];
+
+        $response = $this->json('GET', '/api/v1/wallet', [], $headers);
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'status' => 'fail',
+                'data' => [
+                    "error" => "Wallet disabled",
+                ],
+            ]);
+    }
 }
