@@ -181,6 +181,44 @@ class WalletTest extends TestCase
     }
 
     /**
+     * Test view my wallet transactions success
+     *
+     * @return void
+     */
+    public function testViewWalletTransactions()
+    {
+        $deposit = $this->testWalletDeposit();
+        $token = $deposit['token'];
+
+        $headers = [
+            'Authorization' => 'Token ' . $token,
+            'Accept' => 'application/json',
+        ];
+
+        $response = $this->json('GET', '/api/v1/wallet/transactions', [], $headers);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => 'success',
+            ])
+            ->assertJsonStructure([
+                'status',
+                'data' => [
+                    'transactions' => [
+                        [
+                            'id',
+                            'status',
+                            'transacted_at',
+                            'type',
+                            'amount',
+                            'reference_id',
+                        ],
+                    ],
+                ],
+            ]);
+    }
+
+    /**
      * Test add virtual money to my wallet success
      *
      * @return array $data ['token' => string $token, 'reference_id' => string $reffId]
