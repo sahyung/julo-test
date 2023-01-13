@@ -62,7 +62,7 @@ class WalletTest extends TestCase
     /**
      * Test enable wallet success
      *
-     * @return void
+     * @return string $token
      */
     public function testEnableWallet()
     {
@@ -91,6 +91,8 @@ class WalletTest extends TestCase
                     ],
                 ],
             ]);
+
+        return $token;
     }
 
     /**
@@ -115,6 +117,40 @@ class WalletTest extends TestCase
                 'status' => 'fail',
                 'data' => [
                     "error" => "Already enabled",
+                ],
+            ]);
+    }
+
+    /**
+     * Test view my wallet balance success
+     *
+     * @return void
+     */
+    public function testViewWallet()
+    {
+        $token = $this->testEnableWallet();
+
+        $headers = [
+            'Authorization' => 'Token ' . $token,
+            'Accept' => 'application/json',
+        ];
+
+        $response = $this->json('GET', '/api/v1/wallet', [], $headers);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => 'success',
+            ])
+            ->assertJsonStructure([
+                'status',
+                'data' => [
+                    'wallet' => [
+                        'id',
+                        'status',
+                        'owned_by',
+                        'enabled_at',
+                        'balance',
+                    ],
                 ],
             ]);
     }
