@@ -424,4 +424,37 @@ class WalletTest extends TestCase
                 ],
             ]);
     }
+
+    /**
+     * Test add virtual money to my wallet fail invalid reference_id
+     *
+     * @return void
+     */
+    public function testWalletWithdrawalInvalidReffId()
+    {
+        $deposit = $this->testWalletDeposit();
+        $token = $deposit['token'];
+
+        $headers = [
+            'Authorization' => 'Token ' . $token,
+            'Accept' => 'application/json',
+        ];
+
+        $data = [
+            'amount' => 0,
+            'reference_id' => $deposit['reference_id'],
+        ];
+
+        $response = $this->json('POST', '/api/v1/wallet/withdrawals', $data, $headers);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'status' => 'fail',
+                'data' => [
+                    "error" => [
+                        "reference_id" => [],
+                    ],
+                ],
+            ]);
+    }
 }
