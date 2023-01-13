@@ -92,4 +92,30 @@ class WalletTest extends TestCase
                 ],
             ]);
     }
+
+    /**
+     * Test enable wallet fail already enabled
+     *
+     * @return void
+     */
+    public function testWalletAlreadyEnabled()
+    {
+        $token = $this->testInitWallet();
+
+        $headers = [
+            'Authorization' => 'Token ' . $token,
+            'Accept' => 'application/json',
+        ];
+
+        $response = $this->json('POST', '/api/v1/wallet', [], $headers);
+        $response = $this->json('POST', '/api/v1/wallet', [], $headers);
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'status' => 'fail',
+                'data' => [
+                    "error" => "Already enabled",
+                ],
+            ]);
+    }
 }
