@@ -179,4 +179,44 @@ class WalletTest extends TestCase
                 ],
             ]);
     }
+
+    /**
+     * Test Add virtual money to my wallet success
+     *
+     * @return void
+     */
+    public function testWalletDeposit()
+    {
+        $token = $this->testEnableWallet();
+
+        $headers = [
+            'Authorization' => 'Token ' . $token,
+            'Accept' => 'application/json',
+        ];
+
+        $data = [
+            'amount' => 100000,
+            'reference_id' => Uuid::generate(4)->string,
+        ];
+
+        $response = $this->json('POST', '/api/v1/wallet/deposits', $data, $headers);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'status' => 'success',
+            ])
+            ->assertJsonStructure([
+                'status',
+                'data' => [
+                    'deposit' => [
+                        'id',
+                        'deposited_by',
+                        'status',
+                        'deposited_at',
+                        'amount',
+                        'reference_id',
+                    ],
+                ],
+            ]);
+    }
 }
