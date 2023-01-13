@@ -183,7 +183,7 @@ class WalletTest extends TestCase
     /**
      * Test Add virtual money to my wallet success
      *
-     * @return string $reffId
+     * @return array $data ['token' => string $token, 'reference_id' => string $reffId]
      */
     public function testWalletDeposit()
     {
@@ -219,7 +219,10 @@ class WalletTest extends TestCase
                 ],
             ]);
         
-        return $data['reference_id'];
+        return [
+            'token' => $token,
+            'reference_id' => $data['reference_id'],
+        ];
     }
 
     /**
@@ -261,7 +264,6 @@ class WalletTest extends TestCase
     {
         $token = $this->testEnableWallet();
 
-
         $headers = [
             'Authorization' => 'Token ' . $token,
             'Accept' => 'application/json',
@@ -280,6 +282,39 @@ class WalletTest extends TestCase
                 'data' => [
                     "error" => [
                         "amount" => [],
+                    ],
+                ],
+            ]);
+    }
+
+    /**
+     * Test Add virtual money to my wallet fail invalid reference_id
+     *
+     * @return void
+     */
+    public function testWalletDepositInvalidReffId()
+    {
+        $deposit = $this->testWalletDeposit();
+        $token = $deposit['token'];
+
+        $headers = [
+            'Authorization' => 'Token ' . $token,
+            'Accept' => 'application/json',
+        ];
+
+        $data = [
+            'amount' => 0,
+            'reference_id' => $deposit['reference_id'],
+        ];
+
+        $response = $this->json('POST', '/api/v1/wallet/deposits', $data, $headers);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'status' => 'fail',
+                'data' => [
+                    "error" => [
+                        "reference_id" => [],
                     ],
                 ],
             ]);
