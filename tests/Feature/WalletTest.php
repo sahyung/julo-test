@@ -219,6 +219,31 @@ class WalletTest extends TestCase
     }
 
     /**
+     * Test view my wallet transactions disabled
+     *
+     * @return void
+     */
+    public function testViewWalletTransactionsDisabled()
+    {
+        $token = $this->testInitWallet();
+
+        $headers = [
+            'Authorization' => 'Token ' . $token,
+            'Accept' => 'application/json',
+        ];
+
+        $response = $this->json('GET', '/api/v1/wallet/transactions', [], $headers);
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'status' => 'fail',
+                'data' => [
+                    "error" => "Wallet disabled",
+                ],
+            ]);
+    }
+
+    /**
      * Test add virtual money to my wallet success
      *
      * @return array $data ['token' => string $token, 'reference_id' => string $reffId]
