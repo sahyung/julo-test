@@ -181,7 +181,7 @@ class WalletTest extends TestCase
     }
 
     /**
-     * Test Add virtual money to my wallet success
+     * Test add virtual money to my wallet success
      *
      * @return array $data ['token' => string $token, 'reference_id' => string $reffId]
      */
@@ -226,7 +226,7 @@ class WalletTest extends TestCase
     }
 
     /**
-     * Test Add virtual money to my wallet fail wallet disabled
+     * Test add virtual money to my wallet fail wallet disabled
      *
      * @return void
      */
@@ -256,7 +256,7 @@ class WalletTest extends TestCase
     }
 
     /**
-     * Test Add virtual money to my wallet fail invalid amount
+     * Test add virtual money to my wallet fail invalid amount
      *
      * @return void
      */
@@ -288,7 +288,7 @@ class WalletTest extends TestCase
     }
 
     /**
-     * Test Add virtual money to my wallet fail invalid reference_id
+     * Test add virtual money to my wallet fail invalid reference_id
      *
      * @return void
      */
@@ -316,6 +316,37 @@ class WalletTest extends TestCase
                     "error" => [
                         "reference_id" => [],
                     ],
+                ],
+            ]);
+    }
+
+    /**
+     * Test use virtual money from my wallet fail wallet disabled
+     *
+     * @return void
+     */
+    public function testWalletWithdrawalDisabled()
+    {
+        $token = $this->testInitWallet();
+
+
+        $headers = [
+            'Authorization' => 'Token ' . $token,
+            'Accept' => 'application/json',
+        ];
+
+        $data = [
+            'amount' => 100000,
+            'reference_id' => Uuid::generate(4)->string,
+        ];
+
+        $response = $this->json('POST', '/api/v1/wallet/withdrawals', $data, $headers);
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'status' => 'fail',
+                'data' => [
+                    "error" => "Wallet disabled",
                 ],
             ]);
     }
