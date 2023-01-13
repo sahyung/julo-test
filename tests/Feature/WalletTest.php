@@ -183,7 +183,7 @@ class WalletTest extends TestCase
     /**
      * Test Add virtual money to my wallet success
      *
-     * @return void
+     * @return string $reffId
      */
     public function testWalletDeposit()
     {
@@ -218,6 +218,8 @@ class WalletTest extends TestCase
                     ],
                 ],
             ]);
+        
+        return $data['reference_id'];
     }
 
     /**
@@ -246,6 +248,39 @@ class WalletTest extends TestCase
                 'status' => 'fail',
                 'data' => [
                     "error" => "Wallet disabled",
+                ],
+            ]);
+    }
+
+    /**
+     * Test Add virtual money to my wallet fail invalid amount
+     *
+     * @return void
+     */
+    public function testWalletDepositInvalidAmount()
+    {
+        $token = $this->testEnableWallet();
+
+
+        $headers = [
+            'Authorization' => 'Token ' . $token,
+            'Accept' => 'application/json',
+        ];
+
+        $data = [
+            'amount' => 0,
+            'reference_id' => Uuid::generate(4)->string,
+        ];
+
+        $response = $this->json('POST', '/api/v1/wallet/deposits', $data, $headers);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'status' => 'fail',
+                'data' => [
+                    "error" => [
+                        "amount" => [],
+                    ],
                 ],
             ]);
     }
