@@ -15,7 +15,7 @@
 
 1. clone project
 2. run `docker-compose up -d`
-3. run `composer test`
+3. mini ewallet is ready to test or simply run `docker exec -it julo.backend bash -c "composer test"`
 
 ## Note:
 - documentation at [postman documenter](https://documenter.getpostman.com/view/8411283/SVfMSqA3?version=latest)
