@@ -3,18 +3,20 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
+use Webpatser\Uuid\Uuid;
 
 class WalletTest extends TestCase
 {
     /**
      * Test init wallet success
      *
-     * @return \Illuminate\Http\Response
+     * @return string $token
      */
     public function testInitWallet()
     {
+        $cid = Uuid::generate(4)->string;
         $data = [
-            'customer_xid' => 'ea0212d3-abd6-406f-8c67-868e814a2436',
+            'customer_xid' => $cid,
         ];
 
         $response = $this->json('POST', '/api/v1/init', $data);
@@ -22,16 +24,21 @@ class WalletTest extends TestCase
         $response->assertStatus(201)
             ->assertJson([
                 'status' => 'success',
+            ])
+            ->assertJsonStructure([
+                'status',
                 'data' => [
-                    'token' => 'd0d7e421453a1d6b6f54cf1a352cb6359a0b7a0711e77a5aa81384a9fa5a3516',
+                    'token',
                 ],
             ]);
+
+        return $response->getData()->data->token;
     }
 
     /**
      * Test init wallet fail empty input
      *
-     * @return \Illuminate\Http\Response
+     * @return void
      */
     public function testInitWalletEmptyInput()
     {
@@ -47,6 +54,40 @@ class WalletTest extends TestCase
                         "customer_xid" => [
                             "The customer xid field is required.",
                         ],
+                    ],
+                ],
+            ]);
+    }
+
+    /**
+     * Test enable wallet success
+     *
+     * @return void
+     */
+    public function testEnableWallet()
+    {
+        $token = $this->testInitWallet();
+
+        $headers = [
+            'Authorization' => 'Token ' . $token,
+            'Accept' => 'application/json',
+        ];
+
+        $response = $this->json('POST', '/api/v1/wallet', [], $headers);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'status' => 'success',
+            ])
+            ->assertJsonStructure([
+                'status',
+                'data' => [
+                    'wallet' => [
+                        'id',
+                        'status',
+                        'owned_by',
+                        'enabled_at',
+                        'balance',
                     ],
                 ],
             ]);
