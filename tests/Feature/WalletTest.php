@@ -219,4 +219,34 @@ class WalletTest extends TestCase
                 ],
             ]);
     }
+
+    /**
+     * Test Add virtual money to my wallet fail wallet disabled
+     *
+     * @return void
+     */
+    public function testWalletDepositDisabled()
+    {
+        $token = $this->testInitWallet();
+
+        $headers = [
+            'Authorization' => 'Token ' . $token,
+            'Accept' => 'application/json',
+        ];
+
+        $data = [
+            'amount' => 100000,
+            'reference_id' => Uuid::generate(4)->string,
+        ];
+
+        $response = $this->json('POST', '/api/v1/wallet/deposits', $data, $headers);
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'status' => 'fail',
+                'data' => [
+                    "error" => "Wallet disabled",
+                ],
+            ]);
+    }
 }
