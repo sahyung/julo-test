@@ -224,7 +224,7 @@ class WalletController extends Controller
         }
 
         $rules = [
-            'amount' => "required|numeric|min:0|not_in:0|max:$wallet->balance",
+            'amount' => "required|numeric|min:0|not_in:0",
             'reference_id' => 'required|string|size:36|unique:transactions,reference_id',
         ];
 
@@ -251,13 +251,14 @@ class WalletController extends Controller
             'reference_id' => $request->reference_id,
         ];
 
-        $wallet->balance -= $request->amount;
-
         // Rollback all data if one of the database transactions fails
         DB::beginTransaction();
-
-        if ($wallet->save()) {
-            $newTrx['status'] = $this::STATUS_SUCCESS;
+        
+        if ($wallet->balance >= $request->amount) {
+            $wallet->balance -= $request->amount;
+            if ($wallet->save()) {
+                $newTrx['status'] = $this::STATUS_SUCCESS;
+            }
         }
 
         // restore balance if fail to save transaction
@@ -270,11 +271,21 @@ class WalletController extends Controller
             ]);
 
             DB::commit();
-            return $this->responseSuccess('store_data', [
-                'data' => [
-                    'withdrawal' => $trx,
-                ],
-            ]);
+
+            if ($trx->status === $this::STATUS_SUCCESS) {
+                return $this->responseSuccess('store_data', [
+                    'data' => [
+                        'withdrawal' => $trx,
+                    ],
+                ]);
+            } else {
+                return $this->responseError('validation', [
+                    'message' => "Invalid amount",
+                    'data' => [
+                        'withdrawal' => $trx,
+                    ],
+                ]);
+            }
         } catch (QueryException $exception) {
             DB::rollback();
             $errorInfo = $exception->errorInfo;
