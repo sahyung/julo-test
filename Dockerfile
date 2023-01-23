@@ -4,7 +4,7 @@ ENV USER=www
 ENV GROUP=www
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update -yq && apt-get install -yq \
     git \
     curl \
     libpng-dev \
